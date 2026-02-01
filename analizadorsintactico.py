@@ -67,7 +67,25 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         simbolo = lexico.tipo
         accion = tablaLR[estado][simbolo]
 
-        print(f"{pila.muestra():25} {cadena[lexico.pos-1:]:20} {accion}")
+        # Formatear la pila como una cadena con estados y símbolos
+        pila_formateada = "$" + "".join(
+            f"{pila.datos[i]}{pila.datos[i+1]}" for i in range(0, len(pila.datos), 2)
+        )
+
+        # Formatear la entrada restante
+        entrada_restante = cadena[lexico.pos - 1:] + "$"
+
+        # Formatear la acción
+        if accion > 0:
+            accion_str = f"d{accion}"
+        elif accion < 0:
+            accion_str = f"r{-accion - 1}"
+        elif accion == -1:
+            accion_str = "acept"
+        else:
+            accion_str = "error"
+
+        print(f"{pila_formateada:25} {entrada_restante:20} {accion_str}")
 
         if accion > 0:  # desplazamiento
             pila.push(simbolo)
