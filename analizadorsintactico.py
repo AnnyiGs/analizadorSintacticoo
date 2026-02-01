@@ -13,15 +13,10 @@ class Lexico:
         self.pos = 0
         self.simbolo = None
         self.tipo = None
-        self.inicio_token = 0
+        self.inicio = 0
 
     def sig_simbolo(self):
-        self.inicio_token = self.pos
-
-        if self.pos >= len(self.cadena):
-            self.tipo = PESOS
-            self.simbolo = "$"
-            return
+        self.inicio = self.pos
 
         c = self.cadena[self.pos]
         self.pos += 1
@@ -60,19 +55,19 @@ class Pila:
         return self.datos[-1]
 
     def muestra(self):
-        salida = ""
+        s = ""
         for x in self.datos:
             if x == PESOS:
-                salida += "$"
+                s += "$"
             elif x == MAS:
-                salida += "+"
+                s += "+"
             elif x == E:
-                salida += "E"
+                s += "E"
             elif isinstance(x, str):
-                salida += x
+                s += x
             else:
-                salida += str(x)
-        return salida
+                s += str(x)
+        return s
 
 
 # ----------------------------
@@ -94,8 +89,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         simbolo = lexico.tipo
         accion = tablaLR[estado][simbolo]
 
-        # 👇 ahora sí: entrada REAL pendiente
-        entrada_restante = lexico.cadena[lexico.inicio_token:]
+        entrada_restante = lexico.cadena[lexico.inicio:]
 
         if accion > 0:
             accion_str = f"d{accion}"
@@ -121,7 +115,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
                 pila.pop()
 
             estado = pila.top()
-            pila.push("E")
+            pila.push(E)
             pila.push(tablaLR[estado][E])
 
         else:
