@@ -17,7 +17,6 @@ class Lexico:
 
     def sig_simbolo(self):
         self.inicio = self.pos
-
         c = self.cadena[self.pos]
         self.pos += 1
 
@@ -39,11 +38,11 @@ class Lexico:
 
 
 # ----------------------------
-# Pila
+# Pila LR
 # ----------------------------
 class Pila:
     def __init__(self):
-        self.datos = []
+        self.datos = []  # estado, símbolo, estado, símbolo...
 
     def push(self, x):
         self.datos.append(x)
@@ -55,18 +54,9 @@ class Pila:
         return self.datos[-1]
 
     def muestra(self):
-        s = ""
+        s = "$"
         for x in self.datos:
-            if x == PESOS:
-                s += "$"
-            elif x == MAS:
-                s += "+"
-            elif x == E:
-                s += "E"
-            elif isinstance(x, str):
-                s += x
-            else:
-                s += str(x)
+            s += str(x)
         return s
 
 
@@ -75,14 +65,13 @@ class Pila:
 # ----------------------------
 def parser_lr(cadena, tablaLR, idReglas, lonReglas):
     pila = Pila()
-    pila.push(PESOS)
     pila.push(0)
 
     lexico = Lexico(cadena)
     lexico.sig_simbolo()
 
-    print(f"{'Pila':20} {'Entrada':20} Acción")
-    print("-"*55)
+    print(f"{'Pila':12} {'Entrada':18} Acción")
+    print("-"*45)
 
     while True:
         estado = pila.top()
@@ -95,12 +84,12 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
             accion_str = f"d{accion}"
         elif accion < 0:
             accion_str = f"r{-accion}"
-        elif accion == 0:
-            accion_str = "error"
-        else:
+        elif accion == -1:
             accion_str = "acept"
+        else:
+            accion_str = "error"
 
-        print(f"{pila.muestra():20} {entrada_restante:20} {accion_str}")
+        print(f"{pila.muestra():12} {entrada_restante:18} {accion_str}")
 
         if accion > 0:  # shift
             pila.push(lexico.simbolo)
@@ -115,10 +104,10 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
                 pila.pop()
 
             estado = pila.top()
-            pila.push(E)
+            pila.push("E")
             pila.push(tablaLR[estado][E])
 
-        elif accion == -999:  # aceptación
+        elif accion == -1:
             print("Aceptación")
             break
 
@@ -133,14 +122,13 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
 def main():
     cadena = input("Introduce la cadena a analizar: ")
 
-    # Tabla LR correcta
     tablaLR = [
-        # id   +    $    E
-        [  2,   0,   0,   1],   # 0
-        [  0,   0, -999,  0],   # 1
-        [  0,   3,  -2,   0],   # 2
-        [  2,   0,   0,   4],   # 3
-        [  0,   0,  -1,   0],   # 4
+        # id  +   $   E
+        [ 2,  0,  0,  1],   # 0
+        [ 0,  0, -1,  0],   # 1  ← aquí estaba tu bug
+        [ 0,  3, -2,  0],   # 2
+        [ 2,  0,  0,  4],   # 3
+        [ 0,  0, -1,  0],   # 4
     ]
 
     # r1: E → id + E
