@@ -55,21 +55,18 @@ class Pila:
         return self.datos[-1]
 
     def muestra(self):
-        s = "$"
-        for i in range(0, len(self.datos) - 1, 2):
-            estado = self.datos[i]
-            simbolo = self.datos[i + 1] if i + 1 < len(self.datos) else ""
-
-            if simbolo == PESOS:
-                simbolo = "$"
-            elif simbolo == MAS:
-                simbolo = "+"
-            elif simbolo == E:
-                simbolo = "E"
-
-            s += f"{estado}{simbolo}"
-        if len(self.datos) % 2 == 1:
-            s += str(self.datos[-1])
+        s = ""
+        for x in self.datos:
+            if x == PESOS:
+                s += "$"
+            elif x == MAS:
+                s += "+"
+            elif x == E:
+                s += "E"
+            elif isinstance(x, str):
+                s += x
+            else:
+                s += str(x)
         return s
 
 
@@ -92,32 +89,25 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         simbolo = lexico.tipo
         accion = tablaLR[estado][simbolo]
 
-        # Formatear la pila como una cadena con estados y símbolos separados correctamente
-        pila_formateada = "$ " + " ".join(
-            str(pila.datos[i]) for i in range(len(pila.datos))
-        )
-
-        # Formatear la entrada restante
         entrada_restante = lexico.cadena[lexico.inicio:]
 
-        # Formatear la acción
         if accion > 0:
             accion_str = f"d{accion}"
         elif accion < 0:
-            accion_str = f"r{-accion - 1}"
-        elif accion == -1:
-            accion_str = "acept"
-        else:
+            accion_str = f"r{-accion}"
+        elif accion == 0:
             accion_str = "error"
+        else:
+            accion_str = "acept"
 
-        print(f"{pila_formateada:20} {entrada_restante:20} {accion_str}")
+        print(f"{pila.muestra():20} {entrada_restante:20} {accion_str}")
 
-        if accion > 0:  # desplazamiento
+        if accion > 0:  # shift
             pila.push(lexico.simbolo)
             pila.push(accion)
             lexico.sig_simbolo()
 
-        elif accion < 0:  # reducción
+        elif accion < 0:  # reduce
             regla = -accion - 1
             k = lonReglas[regla]
 
@@ -128,12 +118,12 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
             pila.push(E)
             pila.push(tablaLR[estado][E])
 
-        else:
-            print("Error sintáctico")
+        elif accion == -999:  # aceptación
+            print("Aceptación")
             break
 
-        if accion == -1:
-            print("Aceptación")
+        else:
+            print("Error sintáctico")
             break
 
 
@@ -143,18 +133,18 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
 def main():
     cadena = input("Introduce la cadena a analizar: ")
 
+    # Tabla LR correcta
     tablaLR = [
         # id   +    $    E
-        [  5,   0,   0,   1],
-        [  0,   6,  -1,   0],
-        [  0,  -2,  -2,   0],
-        [  5,   0,   0,   4],
-        [  0,   6,   0,   0],
-        [  0,  -2,  -2,   0],
-        [  5,   0,   0,   7],
-        [  0,  -1,  -1,   0],
+        [  2,   0,   0,   1],   # 0
+        [  0,   0, -999,  0],   # 1
+        [  0,   3,  -2,   0],   # 2
+        [  2,   0,   0,   4],   # 3
+        [  0,   0,  -1,   0],   # 4
     ]
 
+    # r1: E → id + E
+    # r2: E → id
     idReglas = [E, E]
     lonReglas = [3, 1]
 
