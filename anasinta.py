@@ -1,14 +1,13 @@
 import sys
 
 # --- CONSTANTES ---
-# id=0, +=1, $=2, E=3
 COL_ID = 0
 COL_MAS = 1
 COL_PESOS = 2
 COL_E = 3
 
-# Mapeo solo para No Terminales o símbolos especiales numéricos
-NOMBRES_SIMBOLOS = {3: "E", 2: "$"}
+# Mapeo para impresión
+NOMBRES_SIMBOLOS = {3: "E"}
 
 class Lexico:
     def __init__(self, entrada):
@@ -25,10 +24,16 @@ class Lexico:
 
         c = self.entrada[self.indice]
 
+        # --- CAMBIO AQUÍ: LEER PALABRA COMPLETA ---
         if c.isalpha(): 
-            self.simbolo = c  # Guardamos 'a', 'b', etc.
+            start = self.indice
+            # Avanzamos mientras sigan siendo letras
+            while self.indice < len(self.entrada) and self.entrada[self.indice].isalpha():
+                self.indice += 1
+            
+            self.simbolo = self.entrada[start:self.indice] # Tomamos "hola" completo
             self.tipo = COL_ID
-            self.indice += 1
+            
         elif c == '+':
             self.simbolo = "+"
             self.tipo = COL_MAS
@@ -47,19 +52,20 @@ class Lexico:
 
 def formatear_pila(pila):
     salida = ""
-    for item in pila:
-        # Si es un número (Estado o ID de No Terminal)
-        if isinstance(item, int):
-            # Si está en el mapa (ej. 3 -> E), lo usamos. Si no, es un estado (0, 1, 2...)
-            salida += NOMBRES_SIMBOLOS.get(item, str(item))
+    for i, item in enumerate(pila):
+        # IMPARES: Son Estados
+        if i % 2 != 0:
+            salida += str(item)
+        # PARES: Son Símbolos
         else:
-            # Si es string (ej. "a", "+", "$"), lo ponemos directo
-            salida += item
+            if isinstance(item, int):
+                salida += NOMBRES_SIMBOLOS.get(item, str(item))
+            else:
+                salida += item
     return salida
 
 def analizar_cadena_usuario():
-    # --- CONFIGURACIÓN EJERCICIO 2 ---
-    # Filas: 0-4, Cols: id, +, $, E
+    # Tabla Ejercicio 2 (Recursiva)
     tabla_lr = [
         [2,  0,  0,  1],  # 0
         [0,  0, -1,  0],  # 1
@@ -68,34 +74,27 @@ def analizar_cadena_usuario():
         [0,  0, -2,  0]   # 4 
     ]
     
-    id_reglas = [COL_E, COL_E] # Reglas producen E
-    lon_reglas = [3, 1]        # Longitudes
+    id_reglas = [COL_E, COL_E]
+    lon_reglas = [3, 1]
 
-    # --- INICIO ---
-    # Ejemplo sugerido: a+b+c+d+e+f
-    input_str = input("Ingresa la cadena (ej: a+b+c): ")
+    input_str = input("Ingresa la cadena (ej: hola+mundo): ")
     
-    # Encabezados alineados
     print(f"\n{'PILA':<30} {'ENTRADA':<20} {'ACCIÓN'}")
     print("-" * 65)
 
-    # Inicializamos pila con el símbolo "$" textual y estado 0
     pila = ["$", 0] 
     
     lexico = Lexico(input_str)
     lexico.sig_simbolo()
     
     while True:
-        estado_actual = pila[-1] # El tope siempre es un estado (int)
+        estado_actual = pila[-1]
         columna = lexico.tipo
         
-        if estado_actual >= len(tabla_lr):
-            print("Error: Estado inválido")
-            break
+        if estado_actual >= len(tabla_lr): break
 
         accion = tabla_lr[estado_actual][columna]
         
-        # --- IMPRESIÓN ---
         pila_str = formatear_pila(pila)
         entrada_str = lexico.obtener_resto_entrada()
         
@@ -106,31 +105,25 @@ def analizar_cadena_usuario():
         else: accion_str = "Error"
 
         print(f"{pila_str:<30} {entrada_str:<20} {accion_str}")
-        # -----------------
 
         if accion > 0: # Desplazamiento
-            # CAMBIO CLAVE: Metemos el símbolo real ("a", "+") en vez del tipo (0, 1)
             pila.append(lexico.simbolo) 
             pila.append(accion)
             lexico.sig_simbolo()
 
         elif accion < 0: # Reducción
-            if accion == -1:
-                break
+            if accion == -1: break
             else:
                 idx_regla = abs(accion) - 2
                 longitud = lon_reglas[idx_regla]
-                id_lhs = id_reglas[idx_regla] # Esto es 3 (E)
+                id_lhs = id_reglas[idx_regla]
                 
-                # Sacar 2 elementos por cada longitud
                 for _ in range(longitud * 2):
                     if pila: pila.pop()
                 
                 estado_tope = pila[-1]
                 goto = tabla_lr[estado_tope][id_lhs]
                 
-                # Metemos el ID del No Terminal (3) y el nuevo estado
-                # El formateador convertirá 3 -> "E"
                 pila.append(id_lhs)
                 pila.append(goto)
 
