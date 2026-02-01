@@ -89,8 +89,15 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         simbolo = lexico.tipo
         accion = tablaLR[estado][simbolo]
 
+        # Formatear la pila como una cadena con estados y símbolos separados correctamente
+        pila_formateada = "$ " + " ".join(
+            str(pila.datos[i]) if i % 2 == 0 else pila.datos[i] for i in range(len(pila.datos))
+        )
+
+        # Formatear la entrada restante
         entrada_restante = lexico.cadena[lexico.inicio:]
 
+        # Formatear la acción
         if accion > 0:
             accion_str = f"d{accion}"
         elif accion < 0:
@@ -100,7 +107,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         else:
             accion_str = "error"
 
-        print(f"{pila.muestra():20} {entrada_restante:20} {accion_str}")
+        print(f"{pila_formateada:20} {entrada_restante:20} {accion_str}")
 
         if accion > 0:  # desplazamiento
             pila.push(lexico.simbolo)
