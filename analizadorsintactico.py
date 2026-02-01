@@ -100,9 +100,21 @@ def main():
     cadena = input("Introduce la cadena a analizar: ")
 
     # Configurar las tablas necesarias para el parser LR
-    tablaLR = [...]  # Define tu tabla LR aquí
-    idReglas = [...]  # Define tus reglas aquí
-    lonReglas = [...]  # Define las longitudes de las reglas aquí
+    tablaLR = [
+        # Estados: 0, 1, 2, ...
+        # ID   MAS  PESOS  E
+        [  5,   0,    0,   1],
+        [  0,   6,   -1,   0],
+        [  0,  -2,   -2,   0],
+        [  5,   0,    0,   4],
+        [  0,   6,    0,   0],
+        [  0,  -2,   -2,   0],
+        [  5,   0,    0,   7],
+        [  0,  -1,   -1,   0],
+    ]
+
+    idReglas = [E, E]  # Ambas reglas producen E
+    lonReglas = [3, 1]  # Longitud de las reglas: 3 para "id + E", 1 para "id"
 
     # Llamar al parser con la cadena proporcionada
     parser_lr(cadena, tablaLR, idReglas, lonReglas)
