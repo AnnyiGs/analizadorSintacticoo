@@ -1,15 +1,8 @@
-# ----------------------------
-# Tipos de símbolos
-# ----------------------------
 ID = 0
 MAS = 1
 PESOS = 2
 E = 3
 
-
-# ----------------------------
-# Analizador Léxico simple
-# ----------------------------
 class Lexico:
     def __init__(self, cadena):
         self.cadena = cadena + "$"
@@ -42,10 +35,6 @@ class Lexico:
         else:
             raise Exception("Símbolo inválido")
 
-
-# ----------------------------
-# Pila
-# ----------------------------
 class Pila:
     def __init__(self):
         self.datos = []
@@ -62,10 +51,6 @@ class Pila:
     def muestra(self):
         return " ".join(map(str, self.datos))
 
-
-# ----------------------------
-# PARSER LR GENÉRICO
-# ----------------------------
 def parser_lr(cadena, tablaLR, idReglas, lonReglas):
     pila = Pila()
     pila.push(PESOS)
@@ -101,9 +86,9 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
             pila.push(tablaLR[estado][A])
 
         else:
-            print("❌ Error sintáctico")
+            print("Error sintactico")
             break
 
         if accion == -1:
-            print("✅ Aceptación")
+            print("Aceptacion")
             break
