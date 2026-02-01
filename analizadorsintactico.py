@@ -92,3 +92,20 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         if accion == -1:
             print("Aceptacion")
             break
+
+import sys
+
+def main():
+    # Preguntar al usuario por la cadena de entrada
+    cadena = input("Introduce la cadena a analizar: ")
+
+    # Configurar las tablas necesarias para el parser LR
+    tablaLR = [...]  # Define tu tabla LR aquí
+    idReglas = [...]  # Define tus reglas aquí
+    lonReglas = [...]  # Define las longitudes de las reglas aquí
+
+    # Llamar al parser con la cadena proporcionada
+    parser_lr(cadena, tablaLR, idReglas, lonReglas)
+
+if __name__ == "__main__":
+    main()
