@@ -3,12 +3,16 @@ MAS = 1
 PESOS = 2
 E = 3
 
+
+# ----------------------------
+# Analizador Léxico
+# ----------------------------
 class Lexico:
     def __init__(self, cadena):
         self.cadena = cadena + "$"
         self.pos = 0
-        self.simbolo = None
-        self.tipo = None
+        self.simbolo = None   # lexema real
+        self.tipo = None     # tipo (ID, MAS, etc.)
 
     def sig_simbolo(self):
         if self.pos >= len(self.cadena):
@@ -35,6 +39,10 @@ class Lexico:
         else:
             raise Exception("Símbolo inválido")
 
+
+# ----------------------------
+# Pila
+# ----------------------------
 class Pila:
     def __init__(self):
         self.datos = []
@@ -49,8 +57,24 @@ class Pila:
         return self.datos[-1]
 
     def muestra(self):
-        return " ".join(map(str, self.datos))
+        salida = ""
+        for x in self.datos:
+            if x == PESOS:
+                salida += "$"
+            elif x == MAS:
+                salida += "+"
+            elif x == E:
+                salida += "E"
+            elif isinstance(x, str):
+                salida += x
+            else:
+                salida += str(x)
+        return salida
 
+
+# ----------------------------
+# Parser LR
+# ----------------------------
 def parser_lr(cadena, tablaLR, idReglas, lonReglas):
     pila = Pila()
     pila.push(PESOS)
@@ -59,7 +83,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
     lexico = Lexico(cadena)
     lexico.sig_simbolo()
 
-    print(f"{'Pila':25} {'Entrada':20} Acción")
+    print(f"{'Pila':20} {'Entrada':20} Acción")
     print("-"*55)
 
     while True:
@@ -67,15 +91,8 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         simbolo = lexico.tipo
         accion = tablaLR[estado][simbolo]
 
-        # Formatear la pila como una cadena con estados y símbolos
-        pila_formateada = "$" + "".join(
-            f"{pila.datos[i]}{pila.datos[i+1]}" for i in range(0, len(pila.datos), 2)
-        )
+        entrada_restante = lexico.cadena[lexico.pos:]
 
-        # Formatear la entrada restante
-        entrada_restante = cadena[lexico.pos - 1:] + "$"
-
-        # Formatear la acción
         if accion > 0:
             accion_str = f"d{accion}"
         elif accion < 0:
@@ -85,57 +102,59 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         else:
             accion_str = "error"
 
-        print(f"{pila_formateada:25} {entrada_restante:20} {accion_str}")
+        print(f"{pila.muestra():20} {entrada_restante:20} {accion_str}")
 
         if accion > 0:  # desplazamiento
-            pila.push(simbolo)
+            pila.push(lexico.simbolo)   # 👈 empuja el lexema real
             pila.push(accion)
             lexico.sig_simbolo()
 
         elif accion < 0:  # reducción
             regla = -accion - 1
             k = lonReglas[regla]
+
             for _ in range(2 * k):
                 pila.pop()
 
             estado = pila.top()
             A = idReglas[regla]
-            pila.push(A)
+            pila.push("E")
             pila.push(tablaLR[estado][A])
 
         else:
-            print("Error sintactico")
+            print("Error sintáctico")
             break
 
         if accion == -1:
-            print("Aceptacion")
+            print("Aceptación")
             break
 
-import sys
 
+# ----------------------------
+# MAIN
+# ----------------------------
 def main():
-    # Preguntar al usuario por la cadena de entrada
     cadena = input("Introduce la cadena a analizar: ")
 
-    # Configurar las tablas necesarias para el parser LR
+    # Tabla LR para:
+    # E → id + E | id
     tablaLR = [
-        # Estados: 0, 1, 2, ...
-        # ID   MAS  PESOS  E
-        [  5,   0,    0,   1],
-        [  0,   6,   -1,   0],
-        [  0,  -2,   -2,   0],
-        [  5,   0,    0,   4],
-        [  0,   6,    0,   0],
-        [  0,  -2,   -2,   0],
-        [  5,   0,    0,   7],
-        [  0,  -1,   -1,   0],
+        # id   +    $    E
+        [  5,   0,   0,   1],
+        [  0,   6,  -1,   0],
+        [  0,  -2,  -2,   0],
+        [  5,   0,   0,   4],
+        [  0,   6,   0,   0],
+        [  0,  -2,  -2,   0],
+        [  5,   0,   0,   7],
+        [  0,  -1,  -1,   0],
     ]
 
-    idReglas = [E, E]  # Ambas reglas producen E
-    lonReglas = [3, 1]  # Longitud de las reglas: 3 para "id + E", 1 para "id"
+    idReglas = [E, E]
+    lonReglas = [3, 1]
 
-    # Llamar al parser con la cadena proporcionada
     parser_lr(cadena, tablaLR, idReglas, lonReglas)
+
 
 if __name__ == "__main__":
     main()
