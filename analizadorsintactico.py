@@ -96,15 +96,28 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
             pila.push(accion)
             lexico.sig_simbolo()
 
-        elif accion < 0:  # reduce
+        elif accion < 0:  # reducción
             regla = -accion - 1
+
+            # Validar que la regla esté dentro del rango de lonReglas
+            if regla < 0 or regla >= len(lonReglas):
+                print(f"Error: índice de regla fuera de rango ({regla}).")
+                break
+
             k = lonReglas[regla]
+
+            # Validar que la pila tenga suficientes elementos antes de hacer pop
+            if len(pila.datos) < 2 * k:
+                print("Error: la pila no tiene suficientes elementos para la reducción.")
+                print(f"Estado actual de la pila: {pila.muestra()}")
+                print(f"Regla: {regla}, Longitud esperada: {2 * k}, Elementos en la pila: {len(pila.datos)}")
+                break
 
             for _ in range(2 * k):
                 pila.pop()
 
             estado = pila.top()
-            pila.push("E")
+            pila.push(E)
             pila.push(tablaLR[estado][E])
 
         elif accion == -1:
@@ -113,6 +126,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
 
         else:
             print("Error sintáctico")
+            print(f"Estado: {estado}, Símbolo: {simbolo}")
             break
 
 
@@ -122,19 +136,22 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
 def main():
     cadena = input("Introduce la cadena a analizar: ")
 
-    tablaLR = [
-        # id  +   $   E
-        [ 2,  0,  0,  1],   # 0
-        [ 0,  0, -1,  0],   # 1  ← aquí estaba tu bug
-        [ 0,  3, -2,  0],   # 2
-        [ 2,  0,  0,  4],   # 3
-        [ 0,  0, -1,  0],   # 4
-    ]
+    # Gramática: E -> id + E | id
+    idReglas = [E, E]  # Ambas reglas producen E
+    lonReglas = [3, 1]  # Longitudes de las reglas: 3 para "id + E", 1 para "id"
 
-    # r1: E → id + E
-    # r2: E → id
-    idReglas = [E, E]
-    lonReglas = [3, 1]
+    # Tabla LR ajustada para la gramática
+    tablaLR = [
+        # id   +    $    E
+        [  2,   0,   0,   1],  # Estado 0
+        [  0,   3,  -1,   0],  # Estado 1 (Aceptación en $)
+        [  0,  -2,  -2,   0],  # Estado 2 (Reducción por regla 2)
+        [  2,   0,   0,   4],  # Estado 3
+        [  0,   3,   0,   0],  # Estado 4
+        [  0,  -2,  -2,   0],  # Estado 5
+        [  2,   0,   0,   7],  # Estado 6
+        [  0,  -1,  -1,   0],  # Estado 7 (Aceptación final)
+    ]
 
     parser_lr(cadena, tablaLR, idReglas, lonReglas)
 
