@@ -55,18 +55,21 @@ class Pila:
         return self.datos[-1]
 
     def muestra(self):
-        s = ""
-        for x in self.datos:
-            if x == PESOS:
-                s += "$"
-            elif x == MAS:
-                s += "+"
-            elif x == E:
-                s += "E"
-            elif isinstance(x, str):
-                s += x
-            else:
-                s += str(x)
+        s = "$"
+        for i in range(0, len(self.datos) - 1, 2):
+            estado = self.datos[i]
+            simbolo = self.datos[i + 1] if i + 1 < len(self.datos) else ""
+
+            if simbolo == PESOS:
+                simbolo = "$"
+            elif simbolo == MAS:
+                simbolo = "+"
+            elif simbolo == E:
+                simbolo = "E"
+
+            s += f"{estado}{simbolo}"
+        if len(self.datos) % 2 == 1:
+            s += str(self.datos[-1])
         return s
 
 
@@ -91,7 +94,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
 
         # Formatear la pila como una cadena con estados y símbolos separados correctamente
         pila_formateada = "$ " + " ".join(
-            str(pila.datos[i]) if i % 2 == 0 else pila.datos[i] for i in range(len(pila.datos))
+            str(pila.datos[i]) for i in range(len(pila.datos))
         )
 
         # Formatear la entrada restante
