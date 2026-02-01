@@ -11,10 +11,13 @@ class Lexico:
     def __init__(self, cadena):
         self.cadena = cadena + "$"
         self.pos = 0
-        self.simbolo = None   # lexema real
-        self.tipo = None     # tipo (ID, MAS, etc.)
+        self.simbolo = None
+        self.tipo = None
+        self.inicio_token = 0
 
     def sig_simbolo(self):
+        self.inicio_token = self.pos
+
         if self.pos >= len(self.cadena):
             self.tipo = PESOS
             self.simbolo = "$"
@@ -91,7 +94,8 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         simbolo = lexico.tipo
         accion = tablaLR[estado][simbolo]
 
-        entrada_restante = lexico.cadena[lexico.pos:]
+        # 👇 ahora sí: entrada REAL pendiente
+        entrada_restante = lexico.cadena[lexico.inicio_token:]
 
         if accion > 0:
             accion_str = f"d{accion}"
@@ -105,7 +109,7 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
         print(f"{pila.muestra():20} {entrada_restante:20} {accion_str}")
 
         if accion > 0:  # desplazamiento
-            pila.push(lexico.simbolo)   # 👈 empuja el lexema real
+            pila.push(lexico.simbolo)
             pila.push(accion)
             lexico.sig_simbolo()
 
@@ -117,9 +121,8 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
                 pila.pop()
 
             estado = pila.top()
-            A = idReglas[regla]
             pila.push("E")
-            pila.push(tablaLR[estado][A])
+            pila.push(tablaLR[estado][E])
 
         else:
             print("Error sintáctico")
@@ -136,8 +139,6 @@ def parser_lr(cadena, tablaLR, idReglas, lonReglas):
 def main():
     cadena = input("Introduce la cadena a analizar: ")
 
-    # Tabla LR para:
-    # E → id + E | id
     tablaLR = [
         # id   +    $    E
         [  5,   0,   0,   1],
