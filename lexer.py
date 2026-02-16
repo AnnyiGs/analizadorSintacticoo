@@ -49,13 +49,14 @@ class Lexer:
     def analizar(self):
         tokens = []
         patron = re.compile(
-            r"\d+\.\d+|"
-            r"\d+|"
-            r"&&|\|\||==|!=|<=|>=|"
-            r"[+\-*/<>(){};,=]|"
-            r"[a-zA-Z][a-zA-Z0-9]*|"
-            r"\s+|"
-            r"."
+            r"\d+\.\d+|"  # Números reales
+            r"\d+|"  # Números enteros
+            r"&&|\|\||==|!=|<=|>=|"  # Operadores lógicos y relacionales
+            r"[+\-*/<>(){};,=]|"  # Operadores y delimitadores
+            r"[a-zA-Z][a-zA-Z0-9]*|"  # Identificadores válidos
+            r"[0-9][a-zA-Z0-9]*|"  # Identificadores inválidos (comienzan con número)
+            r"\s+|"  # Espacios en blanco
+            r"."  # Cualquier otro carácter
         )
 
         for m in patron.finditer(self.texto):
@@ -64,7 +65,9 @@ class Lexer:
             if lex.isspace():
                 continue
 
-            if re.fullmatch(r"\d+\.\d+", lex):
+            if re.fullmatch(r"[0-9][a-zA-Z0-9]*", lex):
+                self.manejar_error(lex)  # Detectar identificadores inválidos como un solo token
+            elif re.fullmatch(r"\d+\.\d+", lex):
                 tokens.append(Token(lex, TIPOS["real"]))
             elif lex.isdigit():
                 tokens.append(Token(lex, TIPOS["entero"]))
